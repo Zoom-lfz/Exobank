@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ExoBanque — La banque d'exercices collaborative</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+--bg:#07090f;--s1:#0d1220;--s2:#131b2e;--s3:#1a243d;
+--border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+--txt:#dde3f0;--txt2:#8899b4;--txt3:#445166;
+--accent:#6366f1;--ag:rgba(99,102,241,.18);
+--warm:#f59e0b;--ok:#10b981;--err:#ef4444;
+--r:10px;--rs:7px;--sh:0 8px 32px rgba(0,0,0,.5)
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+
+/* ── NAVBAR ── */
+nav{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;gap:20px;
+  padding:0 24px;height:62px;
+  background:rgba(7,9,15,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border)
+}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
+.logo-mark{
+  width:34px;height:34px;border-radius:9px;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;color:#fff
+}
+.logo-name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--txt)}
+.logo-name span{color:var(--accent)}
+.nav-search{flex:1;max-width:440px;position:relative}
+.nav-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--txt3);pointer-events:none}
+#searchInput{
+  width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);
+  padding:8px 14px 8px 36px;font-size:14px;font-family:'Inter',sans-serif;
+  color:var(--txt);outline:none;transition:border-color .2s
+}
+#searchInput:focus{border-color:var(--accent)}
+#searchInput::placeholder{color:var(--txt3)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;border-radius:var(--rs);
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;transition:all .18s
+}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#5254d4}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--txt);background:var(--s2)}
+.btn-sm{padding:6px 12px;font-size:13px}
+.btn-danger{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+
+/* ── HERO ── */
+.hero{
+  padding:56px 24px 40px;text-align:center;
+  position:relative;overflow:hidden
+}
+.hero::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(99,102,241,.14),transparent);
+  pointer-events:none
+}
+.hero-eye{
+  display:inline-block;font-size:11px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;
+  color:var(--accent);background:rgba(99,102,241,.1);
+  border:1px solid rgba(99,102,241,.25);border-radius:99px;
+  padding:4px 14px;margin-bottom:18px
+}
+.hero h1{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:clamp(30px,5vw,54px);font-weight:700;
+  line-height:1.1;margin-bottom:14px
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(135deg,#6366f1,#a855f7,#ec4899);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+.hero p{
+  font-size:15px;color:var(--txt2);
+  max-width:540px;margin:0 auto 32px;line-height:1.7
+}
+.hero-stats{display:flex;align-items:center;justify-content:center;gap:48px;flex-wrap:wrap}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700}
+.stat-label{font-size:12px;color:var(--txt2);margin-top:2px}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:244px 1fr;max-width:1380px;margin:0 auto;padding:0 24px 80px}
+
+/* ── SIDEBAR ── */
+.sidebar{
+  padding:20px 20px 20px 0;
+  position:sticky;top:62px;
+  height:calc(100vh - 62px);
+  overflow-y:auto
+}
+.filt-group{margin-bottom:26px}
+.filt-head{
+  font-size:10px;font-weight:600;letter-spacing:.11em;
+  text-transform:uppercase;color:var(--txt3);
+  margin-bottom:8px;padding-left:3px
+}
+.filt-list{display:flex;flex-direction:column;gap:1px}
+.fi{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 10px;border-radius:var(--rs);
+  cursor:pointer;font-size:13.5px;color:var(--txt2);
+  transition:all .15s;user-select:none;
+  border:1px solid transparent
+}
+.fi:hover{background:var(--s2);color:var(--txt)}
+.fi.active{background:rgba(99,102,241,.11);border-color:rgba(99,102,241,.22);color:#fff}
+.fdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.fc{
+  margin-left:auto;font-size:11px;color:var(--txt3);
+  background:var(--s3);border-radius:99px;padding:1px 6px;min-width:20px;text-align:center
+}
+
+/* ── MAIN ── */
+.main{padding:20px 0 20px 22px;border-left:1px solid var(--border)}
+.main-top{display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.main-title{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600}
+.res-count{font-size:13px;color:var(--txt2)}
+.sort-sel{
+  margin-left:auto;background:var(--s2);border:1px solid var(--border);
+  border-radius:var(--rs);color:var(--txt2);font-size:13px;
+  padding:6px 10px;outline:none;cursor:pointer
+}
+.sort-sel option{background:var(--s2)}
+
+/* ── CHIPS ── */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:99px;padding:3px 10px;
+  font-size:12px;color:var(--txt2)
+}
+.chip-x{cursor:pointer;color:var(--txt3);font-size:15px;line-height:1}
+.chip-x:hover{color:var(--err)}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+
+/* ── CARD ── */
+.card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:var(--r);padding:18px;
+  cursor:pointer;transition:all .2s;
+  position:relative;overflow:hidden
+}
+.card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--sc,var(--accent))
+}
+.card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--sh)}
+.c-hd{display:flex;align-items:flex-start;gap:11px;margin-bottom:11px}
+.c-ico{
+  width:36px;height:36px;flex-shrink:0;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:17px;line-height:1
+}
+.c-meta{flex:1;min-width:0}
+.c-title{
+  font-family:'Space Grotesk',sans-serif;font-size:14.5px;font-weight:600;
+  line-height:1.3;margin-bottom:5px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden
+}
+.c-tags{display:flex;flex-wrap:wrap;gap:5px}
+.badge{
+  font-size:11px;font-weight:500;padding:2px 8px;
+  border-radius:99px;background:var(--s3);color:var(--txt2)
+}
+.bd-diff-easy{background:rgba(16,185,129,.1);color:#10b981}
+.bd-diff-medium{background:rgba(245,158,11,.1);color:#f59e0b}
+.bd-diff-hard{background:rgba(239,68,68,.1);color:#ef4444}
+.bd-diff-expert{background:rgba(168,85,247,.1);color:#a855f7}
+.c-body{
+  font-size:13px;color:var(--txt2);line-height:1.6;margin-bottom:14px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden
+}
+.c-foot{
+  display:flex;align-items:center;gap:10px;
+  border-top:1px solid var(--border);padding-top:11px
+}
+.c-author{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--txt3)}
+.ava{
+  width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:#fff;flex-shrink:0
+}
+.c-act{margin-left:auto;display:flex;align-items:center;gap:6px}
+.ibt{
+  width:28px;height:28px;border:none;
+  background:var(--s2);border-radius:6px;
+  color:var(--txt3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;transition:all .15s
+}
+.ibt:hover{background:var(--s3);color:var(--txt)}
+.ibt.liked{color:var(--err)}
+.ibt.bookmarked{color:var(--warm)}
+.lk{font-size:11px;color:var(--txt3)}
+
+/* ── EMPTY ── */
+.empty{
+  text-align:center;padding:80px 20px;
+  grid-column:1/-1
+}
+.empty-ico{font-size:44px;margin-bottom:14px}
+.empty-t{font-family:'Space Grotesk',sans-serif;font-size:19px;font-weight:600;margin-bottom:7px}
+.empty-d{font-size:14px;color:var(--txt2);line-height:1.6}
+.empty-d a{color:var(--accent);text-decoration:none}
+.empty-d a:hover{text-decoration:underline}
+
+/* ── OVERLAY ── */
+.ov{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(5px);
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;opacity:0;pointer-events:none;transition:opacity .2s
+}
+.ov.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:16px;width:100%;max-width:660px;
+  max-height:90vh;overflow-y:auto;
+  transform:translateY(18px);transition:transform .28s
+}
+.ov.open .modal{transform:translateY(0)}
+.modal-lg{max-width:740px}
+.m-hd{
+  display:flex;align-items:center;gap:11px;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:var(--s1);z-index:1
+}
+.m-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:600}
+.m-close{
+  margin-left:auto;width:30px;height:30px;border:none;
+  background:var(--s2);border-radius:7px;color:var(--txt2);
+  cursor:pointer;font-size:17px;display:flex;align-items:center;justify-content:center;
+  transition:all .15s
+}
+.m-close:hover{background:var(--s3);color:var(--txt)}
+.m-body{padding:22px}
+.m-foot{
+  display:flex;align-items:center;justify-content:flex-end;gap:10px;
+  padding:14px 22px;border-top:1px solid var(--border)
+}
+
+/* ── FORM ── */
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.fg label{font-size:12.5px;font-weight:500;color:var(--txt2)}
+.fg label .req{color:var(--accent)}
+.fg input,.fg select,.fg textarea{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);
+  padding:9px 12px;font-family:'Inter',sans-serif;font-size:14px;
+  color:var(--txt);outline:none;transition:border-color .2s;width:100%
+}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--accent)}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--txt3)}
+.fg select option{background:var(--s2)}
+.fg textarea{resize:vertical;line-height:1.6;min-height:90px}
+.fg .hint{font-size:11.5px;color:var(--txt3)}
+.form2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.span2{grid-column:span 2}
+
+/* ── TAGS INPUT ── */
+.tags-wrap{
+  display:flex;flex-wrap:wrap;align-items:center;gap:5px;
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--rs);
+  padding:7px;cursor:text;min-height:42px
+}
+.tags-wrap:focus-within{border-color:var(--accent)}
+.tg{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(99,102,241,.15);color:var(--accent);
+  border-radius:5px;padding:2px 7px;font-size:12.5px
+}
+.tg-rm{cursor:pointer;opacity:.7;font-size:14px}
+.tg-rm:hover{opacity:1;color:var(--err)}
+#tagInput{
+  border:none!important;outline:none!important;background:transparent!important;
+  padding:2px 4px!important;font-size:13.5px!important;
+  color:var(--txt)!important;min-width:80px;flex:1
+}
+
+/* ── DETAIL ── */
+.d-banner{
+  padding:22px;border-bottom:1px solid var(--border)
+}
+.d-badges{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px}
+.d-title{
+  font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;
+  line-height:1.25;margin-bottom:9px
+}
+.d-meta{display:flex;align-items:center;gap:18px;font-size:13px;color:var(--txt2);flex-wrap:wrap}
+.d-mi{display:flex;align-items:center;gap:5px}
+.sec-lbl{
+  font-size:10px;font-weight:600;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--txt3);
+  display:flex;align-items:center;gap:8px;margin-bottom:10px
+}
+.sec-lbl::after{content:'';flex:1;height:1px;background:var(--border)}
+.exo-body{
+  font-size:14.5px;line-height:1.8;color:var(--txt);
+  white-space:pre-wrap;font-family:'Inter',sans-serif
+}
+.exo-body code{
+  font-family:'JetBrains Mono',monospace;
+  background:var(--s3);padding:2px 6px;border-radius:4px;font-size:12.5px
+}
+.sol-toggle{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 15px;background:rgba(16,185,129,.06);
+  border:1px solid rgba(16,185,129,.15);border-radius:var(--rs);
+  cursor:pointer;font-size:13.5px;font-weight:500;color:var(--ok);
+  transition:all .2s;user-select:none
+}
+.sol-toggle:hover{background:rgba(16,185,129,.1)}
+.sol-box{
+  background:var(--s2);border:1px solid rgba(16,185,129,.18);
+  border-radius:var(--r);padding:18px;margin-top:10px
+}
+.ai-box{
+  background:linear-gradient(135deg,rgba(99,102,241,.05),rgba(168,85,247,.05));
+  border:1px solid rgba(99,102,241,.15);
+  border-radius:var(--r);padding:18px;margin-top:8px
+}
+.ai-hd{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.ai-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:linear-gradient(135deg,#6366f1,#a855f7);
+  border-radius:99px;padding:3px 10px;
+  font-size:11px;font-weight:600;color:#fff
+}
+.ai-txt{font-size:13.5px;line-height:1.7;color:var(--txt2);white-space:pre-wrap}
+.spinner{
+  width:16px;height:16px;border:2px solid rgba(255,255,255,.2);
+  border-top-color:#fff;border-radius:50%;
+  animation:spin .6s linear infinite
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* ── TOAST ── */
+.toasts{position:fixed;bottom:22px;right:22px;z-index:300;display:flex;flex-direction:column;gap:9px}
+.toast{
+  background:var(--s2);border:1px solid var(--border);border-radius:var(--r);
+  padding:11px 15px;font-size:13.5px;color:var(--txt);
+  display:flex;align-items:center;gap:9px;box-shadow:var(--sh);
+  animation:tsIn .3s ease;min-width:220px
+}
+.toast.ok{border-color:rgba(16,185,129,.3)}
+.toast.err{border-color:rgba(239,68,68,.3)}
+@keyframes tsIn{from{transform:translateX(110%);opacity:0}to{transform:none;opacity:1}}
+
+/* ── SECTION DIVIDER ── */
+.mt16{margin-top:16px}
+.mt20{margin-top:20px}
+.mt24{margin-top:24px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:860px){
+  .app{grid-template-columns:1fr;padding:0 16px 60px}
+  .sidebar{position:static;height:auto;padding:14px 0;border-bottom:1px solid var(--border)}
+  .filt-list{flex-direction:row;flex-wrap:wrap}
+  .fi{padding:5px 10px;font-size:12.5px}
+  .main{border-left:none;padding:14px 0}
+  .grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  nav{padding:0 14px}
+  .nav-search{display:none}
+  .logo-name{display:none}
+  .hero{padding:36px 16px 28px}
+  .hero-stats{gap:24px}
+  .form2{grid-template-columns:1fr}
+  .span2{grid-column:span 1}
+  .modal{border-radius:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-mark">E</div>
+    <span class="logo-name">Exo<span>Banque</span></span>
+  </a>
+  <div class="nav-search">
+    <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="searchInput" placeholder="Rechercher un exercice, une matière, un tag…"/>
+  </div>
+  <div class="nav-right">
+    <button class="btn btn-ghost btn-sm" onclick="showStats()">📊 Stats</button>
+    <button class="btn btn-primary" onclick="openAdd()">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+      Ajouter
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eye">Plateforme d'apprentissage collaborative</div>
+  <h1>La banque d'exercices<br/><em>ouverte à tous</em></h1>
+  <p>Partagez vos exercices, découvrez ceux des autres. Mathématiques, Physique, Chimie, Informatique et bien plus — du primaire au doctorat.</p>
+  <div class="hero-stats">
+    <div><div class="stat-num" id="sExos">0</div><div class="stat-label">Exercices</div></div>
+    <div><div class="stat-num">10</div><div class="stat-label">Matières</div></div>
+    <div><div class="stat-num">7</div><div class="stat-label">Niveaux</div></div>
+    <div><div class="stat-num" id="sContribs">0</div><div class="stat-label">Contributeurs</div></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="filt-group">
+      <div class="filt-head">Matière</div>
+      <div class="filt-list" id="sfList">
+        <div class="fi active" data-f="subject" data-v="all" onclick="setF('subject','all',this)">
+          <div class="fdot" style="background:var(--accent)"></div>Toutes
+          <span class="fc" id="fc-all"></span>
+        </div>
+        <div class="fi" data-f="subject" data-v="Mathématiques" onclick="setF('subject','Mathématiques',this)"><div class="fdot" style="background:#6366f1"></div>Mathématiques<span class="fc" id="fc-Math"></span></div>
+        <div class="fi" data-f="subject" data-v="Physique" onclick="setF('subject','Physique',this)"><div class="fdot" style="background:#14b8a6"></div>Physique<span class="fc" id="fc-Phys"></span></div>
+        <div class="fi" data-f="subject" data-v="Chimie" onclick="setF('subject','Chimie',this)"><div class="fdot" style="background:#f59e0b"></div>Chimie<span class="fc" id="fc-Chim"></span></div>
+        <div class="fi" data-f="subject" data-v="Biologie" onclick="setF('subject','Biologie',this)"><div class="fdot" style="background:#22c55e"></div>Biologie<span class="fc" id="fc-Bio"></span></div>
+        <div class="fi" data-f="subject" data-v="Informatique" onclick="setF('subject','Informatique',this)"><div class="fdot" style="background:#a855f7"></div>Informatique<span class="fc" id="fc-Info"></span></div>
+        <div class="fi" data-f="subject" data-v="Histoire-Géo" onclick="setF('subject','Histoire-Géo',this)"><div class="fdot" style="background:#f97316"></div>Histoire-Géo<span class="fc" id="fc-Hist"></span></div>
+        <div class="fi" data-f="subject" data-v="Français" onclick="setF('subject','Français',this)"><div class="fdot" style="background:#ec4899"></div>Français<span class="fc" id="fc-Fr"></span></div>
+        <div class="fi" data-f="subject" data-v="Anglais" onclick="setF('subject','Anglais',this)"><div class="fdot" style="background:#3b82f6"></div>Anglais<span class="fc" id="fc-Eng"></span></div>
+        <div class="fi" data-f="subject" data-v="Économie" onclick="setF('subject','Économie',this)"><div class="fdot" style="background:#84cc16"></div>Économie<span class="fc" id="fc-Eco"></span></div>
+        <div class="fi" data-f="subject" data-v="Philosophie" onclick="setF('subject','Philosophie',this)"><div class="fdot" style="background:#94a3b8"></div>Philosophie<span class="fc" id="fc-Philo"></span></div>
+        <div class="fi" data-f="subject" data-v="Autre" onclick="setF('subject','Autre',this)"><div class="fdot" style="background:#6366f1"></div>Autre<span class="fc" id="fc-Other"></span></div>
+      </div>
+    </div>
+    <div class="filt-group">
+      <div class="filt-head">Niveau</div>
+      <div class="filt-list" id="lfList">
+        <div class="fi active" data-f="level" data-v="all" onclick="setF('level','all',this)">Tous</div>
+        <div class="fi" data-f="level" data-v="Primaire" onclick="setF('level','Primaire',this)">📚 Primaire</div>
+        <div class="fi" data-f="level" data-v="Collège" onclick="setF('level','Collège',this)">🎒 Collège</div>
+        <div class="fi" data-f="level" data-v="Lycée" onclick="setF('level','Lycée',this)">🏫 Lycée</div>
+        <div class="fi" data-f="level" data-v="BTS/CPGE" onclick="setF('level','BTS/CPGE',this)">📐 BTS / CPGE</div>
+        <div class="fi" data-f="level" data-v="Licence" onclick="setF('level','Licence',this)">🎓 Licence</div>
+        <div class="fi" data-f="level" data-v="Master" onclick="setF('level','Master',this)">🔬 Master</div>
+        <div class="fi" data-f="level" data-v="Doctorat" onclick="setF('level','Doctorat',this)">🏆 Doctorat</div>
+      </div>
+    </div>
+    <div class="filt-group">
+      <div class="filt-head">Difficulté</div>
+      <div class="filt-list" id="dfList">
+        <div class="fi active" data-f="diff" data-v="all" onclick="setF('diff','all',this)">Toutes</div>
+        <div class="fi" data-f="diff" data-v="Facile" onclick="setF('diff','Facile',this)"><span style="color:#10b981">●</span> Facile</div>
+        <div class="fi" data-f="diff" data-v="Moyen" onclick="setF('diff','Moyen',this)"><span style="color:#f59e0b">●</span> Moyen</div>
+        <div class="fi" data-f="diff" data-v="Difficile" onclick="setF('diff','Difficile',this)"><span style="color:#ef4444">●</span> Difficile</div>
+        <div class="fi" data-f="diff" data-v="Expert" onclick="setF('diff','Expert',this)"><span style="color:#a855f7">●</span> Expert</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-top">
+      <div>
+        <div class="main-title">Exercices</div>
+        <div class="res-count" id="resCount"></div>
+      </div>
+      <select class="sort-sel" id="sortSel" onchange="render()">
+        <option value="new">Plus récents</option>
+        <option value="pop">Plus appréciés</option>
+        <option value="az">A → Z</option>
+      </select>
+    </div>
+    <div class="chips" id="chipsArea"></div>
+    <div class="grid" id="exGrid"></div>
+  </main>
+</div>
+
+<!-- ===== ADD MODAL ===== -->
+<div class="ov" id="addOv">
+  <div class="modal">
+    <div class="m-hd">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#6366f1" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="m-title" id="addTitle">Ajouter un exercice</span>
+      <button class="m-close" onclick="closeOv('addOv')">✕</button>
+    </div>
+    <div class="m-body">
+      <div class="form2">
+        <div class="fg span2">
+          <label>Titre <span class="req">*</span></label>
+          <input type="text" id="fTitle" placeholder="Ex : Calcul de dérivée par définition"/>
+        </div>
+        <div class="fg">
+          <label>Matière <span class="req">*</span></label>
+          <select id="fSubject">
+            <option value="">— Choisir —</option>
+            <option>Mathématiques</option><option>Physique</option><option>Chimie</option>
+            <option>Biologie</option><option>Informatique</option><option>Histoire-Géo</option>
+            <option>Français</option><option>Anglais</option><option>Économie</option>
+            <option>Philosophie</option><option>Autre</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Niveau <span class="req">*</span></label>
+          <select id="fLevel">
+            <option value="">— Choisir —</option>
+            <option>Primaire</option><option>Collège</option><option>Lycée</option>
+            <option>BTS/CPGE</option><option>Licence</option><option>Master</option><option>Doctorat</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Difficulté <span class="req">*</span></label>
+          <select id="fDiff">
+            <option value="">— Choisir —</option>
+            <option>Facile</option><option>Moyen</option><option>Difficile</option><option>Expert</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Votre nom / pseudo</label>
+          <input type="text" id="fAuthor" placeholder="Anonyme"/>
+        </div>
+        <div class="fg span2">
+          <label>Énoncé <span class="req">*</span></label>
+          <textarea id="fContent" rows="7" placeholder="Rédigez l'énoncé complet ici…"></textarea>
+        </div>
+        <div class="fg span2">
+          <label>Solution / Correction</label>
+          <textarea id="fSolution" rows="5" placeholder="Solution détaillée (optionnel)…"></textarea>
+        </div>
+        <div class="fg span2">
+          <label>Tags</label>
+          <div class="tags-wrap" id="tagsWrap" onclick="document.getElementById('tagInput').focus()">
+            <input type="text" id="tagInput" placeholder="Ajouter un tag…"/>
+          </div>
+          <div class="hint">Appuyez sur Entrée ou virgule pour valider un tag</div>
+        </div>
+      </div>
+    </div>
+    <div class="m-foot">
+      <button class="btn btn-ghost" onclick="closeOv('addOv')">Annuler</button>
+      <button class="btn btn-primary" onclick="save()">
+        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"/></svg>
+        Publier
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DETAIL MODAL ===== -->
+<div class="ov" id="detOv">
+  <div class="modal modal-lg">
+    <div class="m-hd">
+      <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#6366f1" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <span class="m-title">Détail de l'exercice</span>
+      <button class="m-close" onclick="closeOv('detOv')">✕</button>
+    </div>
+    <div id="detBody"></div>
+  </div>
+</div>
+
+<!-- ===== STATS MODAL ===== -->
+<div class="ov" id="statsOv">
+  <div class="modal" style="max-width:480px">
+    <div class="m-hd">
+      <span style="font-size:18px">📊</span>
+      <span class="m-title">Statistiques</span>
+      <button class="m-close" onclick="closeOv('statsOv')">✕</button>
+    </div>
+    <div class="m-body" id="statsBody"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+const SC={
+  'Mathématiques':'#6366f1','Physique':'#14b8a6','Chimie':'#f59e0b',
+  'Biologie':'#22c55e','Informatique':'#a855f7','Histoire-Géo':'#f97316',
+  'Français':'#ec4899','Anglais':'#3b82f6','Économie':'#84cc16',
+  'Philosophie':'#94a3b8','Autre':'#6366f1'
+};
+const SI={
+  'Mathématiques':'∑','Physique':'⚛','Chimie':'🧪','Biologie':'🧬',
+  'Informatique':'💻','Histoire-Géo':'🗺','Français':'✍','Anglais':'🌍',
+  'Économie':'📈','Philosophie':'💭','Autre':'📖'
+};
+const DIFF_CLS={'Facile':'bd-diff-easy','Moyen':'bd-diff-medium','Difficile':'bd-diff-hard','Expert':'bd-diff-expert'};
+const SAMPLE=[
+  {id:'s1',title:"Limite par la règle de L'Hôpital",subject:'Mathématiques',level:'Licence',difficulty:'Moyen',author:'Prof. Martin',
+   content:"Calculer les limites suivantes :\n\n1) lim (x→0) [ sin(x) / x ]\n\n2) lim (x→0) [ (1 - cos x) / x² ]\n\nPour chaque cas : identifier la forme indéterminée, appliquer L'Hôpital et conclure.",
+   solution:"1) Forme 0/0 → L'Hôpital : lim cos(x)/1 = 1\n\n2) Forme 0/0 → L'Hôpital : lim sin(x)/(2x) → 0/0 → lim cos(x)/2 = 1/2\n\nRésultats : 1 et 1/2",
+   tags:['limite','L\'Hôpital','trigonométrie','analyse'],likes:42,date:'2024-11-10',likedBy:[],bkBy:[]},
+  {id:'s2',title:'Loi d\'Ohm et circuits résistifs en série',subject:'Physique',level:'Lycée',difficulty:'Facile',author:'Mme Kouassi',
+   content:"Un générateur (E = 12 V, r = 1 Ω) alimente R₁ = 5 Ω et R₂ = 4 Ω en série.\n\n1. Calculer l'intensité I.\n2. Tension aux bornes de chaque résistance.\n3. Puissance dissipée dans R₂.\n4. Tension en circuit ouvert.",
+   solution:"Rtot = 10 Ω → I = 1,2 A\nU₁ = 6 V, U₂ = 4,8 V\nP₂ = 4 × 1,44 = 5,76 W\nCircuit ouvert : U = E = 12 V",
+   tags:['Ohm','résistance','circuit','électricité'],likes:38,date:'2024-11-20',likedBy:[],bkBy:[]},
+  {id:'s3',title:"Équilibre chimique — Constante d'estérification",subject:'Chimie',level:'BTS/CPGE',difficulty:'Difficile',author:'Dr. Traoré',
+   content:"Réaction : CH₃COOH + C₂H₅OH ⇌ CH₃COOC₂H₅ + H₂O  (K = 4)\nMélange initial : 1 mol de chaque réactif.\n\n1. Tableau d'avancement.\n2. Taux d'avancement τ à l'équilibre.\n3. Volume d'ester produit (d = 0,902 g/mL, M = 88 g/mol).\n4. Comment améliorer le rendement ?",
+   solution:"K = x²/(1-x)² = 4 → x/(1-x) = 2 → x = 2/3 ≈ 66,7 %\nMasse ester = 0,667 × 88 = 58,7 g → Volume ≈ 65 mL\nAmélioration : éliminer H₂O par distillation ou excès de réactif.",
+   tags:['équilibre','estérification','K','stoéchiométrie'],likes:55,date:'2024-12-01',likedBy:[],bkBy:[]},
+  {id:'s4',title:'Algorithme de tri par insertion — Analyse complète',subject:'Informatique',level:'Lycée',difficulty:'Moyen',author:'M. Diallo',
+   content:"1. Expliquer le principe du tri par insertion.\n2. Écrire le pseudo-code pour trier un tableau T de n entiers.\n3. Implémenter en Python.\n4. Analyser la complexité (meilleur/pire/moyen cas).\n5. Sur quel type de données est-il particulièrement efficace ?",
+   solution:"Pseudo-code :\npour i de 1 à n-1 :\n  clé ← T[i], j ← i-1\n  tant que j≥0 et T[j]>clé : T[j+1]←T[j], j--\n  T[j+1] ← clé\n\nPython :\ndef tri_insertion(T):\n    for i in range(1,len(T)):\n        c=T[i]; j=i-1\n        while j>=0 and T[j]>c:\n            T[j+1]=T[j]; j-=1\n        T[j+1]=c\n    return T\n\nComplexité : O(n) meilleur, O(n²) pire/moyen.\nEfficace sur tableaux presque triés.",
+   tags:['tri','algorithme','complexité','Python'],likes:61,date:'2024-12-15',likedBy:[],bkBy:[]},
+  {id:'s5',title:"Analyse littéraire — L'incipit de L'Étranger (Camus)",subject:'Français',level:'Lycée',difficulty:'Moyen',author:'Mme Bamba',
+   content:'Analysez l\'incipit : "Aujourd\'hui, maman est morte. Ou peut-être hier, je ne sais pas."\n\n1. Analysez la construction syntaxique.\n2. Que révèle "ou peut-être hier" sur la psychologie du narrateur ?\n3. En quoi cet incipit illustre-t-il l\'absurde camusien ?\n4. Rédigez un paragraphe de commentaire littéraire.',
+   solution:"1. Phrases courtes, parataxe, rectificatif → rupture syntaxique mimant le détachement.\n2. Indifférence affective : incertitude non par oubli, mais par désinvestissement émotionnel.\n3. L'absurde : rupture entre attente sociale et réaction de Meursault. Le monde est dénué de sens transcendant.\n4. Axe : indifférence, style blanc, absurde existentiel.",
+   tags:['Camus','absurde','incipit','commentaire'],likes:29,date:'2025-01-05',likedBy:[],bkBy:[]},
+  {id:'s6',title:'Photosynthèse — Mécanismes et bilan énergétique',subject:'Biologie',level:'Lycée',difficulty:'Facile',author:'Prof. Yao',
+   content:"1. Écrire l'équation bilan de la photosynthèse.\n2. Identifier les deux phases et leur localisation dans le chloroplaste.\n3. Préciser réactifs, produits et sources d'énergie de chaque phase.\n4. Quel est le rôle de l'eau dans la phase photochimique ?\n5. Pourquoi la photosynthèse est-elle fondamentale pour la vie ?",
+   solution:"1. 6CO₂ + 6H₂O + lumière → C₆H₁₂O₆ + 6O₂\n2. Phase lumineuse (thylakoïdes) + Cycle de Calvin (stroma)\n3. Lumière : H₂O + photons → ATP + NADPH + O₂\n   Calvin : CO₂ + ATP + NADPH → glucose\n4. Photolyse : libère O₂ et électrons pour la chaîne respiratoire\n5. Fixation CO₂, production O₂, base de toutes les chaînes trophiques.",
+   tags:['photosynthèse','chloroplaste','ATP','Calvin'],likes:35,date:'2025-01-12',likedBy:[],bkBy:[]},
+  {id:'s7',title:'Équations du second degré — Résolution complète',subject:'Mathématiques',level:'Collège',difficulty:'Facile',author:'M. Coulibaly',
+   content:"Résoudre dans ℝ, calculer Δ et factoriser :\n\n1. 2x² − 8x + 6 = 0\n2. x² + 4x + 5 = 0\n3. 3x² − 12 = 0\n4. (x−2)(x+3) = 14",
+   solution:"1. Δ=16 → x₁=3, x₂=1 ; factorisation : 2(x−1)(x−3)\n2. Δ=−4 < 0 → pas de solution réelle\n3. x²=4 → x=±2\n4. x²+x−20=0 → Δ=81 → x=4 ou x=−5",
+   tags:['discriminant','équation','second degré','factorisation'],likes:78,date:'2025-01-20',likedBy:[],bkBy:[]},
+  {id:'s8',title:"Équation de Schrödinger — Puits de potentiel infini",subject:'Physique',level:'Master',difficulty:'Expert',author:'Dr. Ouédraogo',
+   content:"Particule de masse m dans un puits infini 0 ≤ x ≤ L.\n\n1. Écrire l'équation de Schrödinger stationnaire.\n2. Résoudre et imposer les conditions aux limites.\n3. Trouver les énergies propres Eₙ et fonctions d'onde normalisées ψₙ(x).\n4. Calculer ⟨x⟩ et ⟨p⟩ pour l'état fondamental.\n5. Vérifier le principe d'incertitude de Heisenberg.",
+   solution:"1. −(ℏ²/2m) ψ'' = Eψ (V=0 intérieur)\n2. ψ(x) = A sin(kx), k_n = nπ/L (conditions ψ(0)=ψ(L)=0)\n3. Eₙ = n²π²ℏ²/(2mL²) ; ψₙ = √(2/L) sin(nπx/L)\n4. ⟨x⟩ = L/2 (symétrie) ; ⟨p⟩ = 0 (état stationnaire)\n5. ΔxΔp ≥ ℏ/2 ✓",
+   tags:['Schrödinger','quantique','puits infini','Heisenberg'],likes:47,date:'2025-02-01',likedBy:[],bkBy:[]},
+  {id:'s9',title:'Électrolyse de l\'eau — Bilan et applications',subject:'Chimie',level:'Collège',difficulty:'Facile',author:'Prof. Sanogo',
+   content:"On électrolyse une solution aqueuse d'acide sulfurique.\n\n1. Écrire les demi-équations à chaque électrode.\n2. Écrire la réaction globale.\n3. Quelle quantité de H₂ est produite si on fait passer 2 A pendant 30 min ?\n4. Citer deux applications industrielles de l'électrolyse.",
+   solution:"Cathode : 2H⁺ + 2e⁻ → H₂\nAnode : H₂O → ½O₂ + 2H⁺ + 2e⁻\nBilan : H₂O → H₂ + ½O₂\n\nQ = I×t = 2×1800 = 3600 C\nN(H₂) = Q/(2F) = 3600/(2×96500) ≈ 0,0187 mol → V ≈ 420 mL\n\nApplications : aluminium (Hall-Héroult), chlore-soude.",
+   tags:['électrolyse','électrochimie','Faraday','eau'],likes:32,date:'2025-02-10',likedBy:[],bkBy:[]},
+  {id:'s10',title:'Récursivité — Tours de Hanoï',subject:'Informatique',level:'Licence',difficulty:'Difficile',author:'M. Konaté',
+   content:"Les Tours de Hanoï : déplacer n disques d'un piquet A vers C en utilisant B comme auxiliaire (un seul disque à la fois, jamais un grand sur un petit).\n\n1. Écrire un algorithme récursif en pseudo-code.\n2. Implémenter en Python.\n3. Prouver que le nombre de déplacements est 2ⁿ−1.\n4. Quelle est la complexité temporelle ?",
+   solution:"Récursion :\nhanoi(n, A, C, B) :\n  si n==1 : déplacer A→C\n  sinon :\n    hanoi(n-1, A, B, C)\n    déplacer A→C\n    hanoi(n-1, B, C, A)\n\nPython :\ndef hanoi(n,src,dst,aux):\n    if n==1: print(f\"{src}→{dst}\"); return\n    hanoi(n-1,src,aux,dst)\n    print(f\"{src}→{dst}\")\n    hanoi(n-1,aux,dst,src)\n\nPreuve : T(n)=2T(n-1)+1 → T(n)=2ⁿ−1\nComplexité : O(2ⁿ) (exponentielle).",
+   tags:['récursivité','Hanoï','complexité','algorithme'],likes:53,date:'2025-02-18',likedBy:[],bkBy:[]},
+  {id:'s11',title:'Croissance économique — Modèle de Solow',subject:'Économie',level:'Master',difficulty:'Expert',author:'Dr. Touré',
+   content:"Le modèle de Solow suppose : Y = K^α × (AL)^(1-α), s le taux d'épargne, δ la dépréciation, n la croissance démographique, g le progrès technique.\n\n1. Dériver l'équation d'accumulation du capital par tête effective k̃.\n2. Trouver le capital d'état stationnaire k̃*.\n3. Calculer la règle d'or k̃_or.\n4. Analyser l'impact d'une hausse de s sur le sentier de croissance équilibré.",
+   solution:"1. dk̃/dt = s·f(k̃) − (n+g+δ)k̃ avec k̃=K/(AL)\n2. k̃* tel que s·f(k̃*) = (n+g+δ)k̃*\n   Pour Cobb-Douglas : k̃* = (s/(n+g+δ))^(1/(1-α))\n3. Règle d'or : f'(k̃_or) = n+g+δ → αk̃_or^(α-1) = n+g+δ\n4. Hausse de s → k̃* plus élevé → transition dynamique vers nouveau SGE → croissance temporaire supérieure, puis retour à g au SGE.",
+   tags:['Solow','croissance','macroéco','capital'],likes:41,date:'2025-03-01',likedBy:[],bkBy:[]},
+  {id:'s12',title:'Philosophie du langage — Wittgenstein et les jeux de langage',subject:'Philosophie',level:'Licence',difficulty:'Moyen',author:'Mme Sidibé',
+   content:"À partir de la notion de « jeux de langage » chez le second Wittgenstein :\n\n1. Expliquez en quoi le sens d'un mot réside dans son usage et non en sa référence.\n2. Comment cette thèse remet-elle en cause la vision augustinienne du langage ?\n3. En quoi la notion de « forme de vie » (Lebensform) est-elle indissociable des jeux de langage ?\n4. Discutez : peut-on encore parler de vérité si le sens est contextuel ?",
+   solution:"1. Wittgenstein (Inv. Phil.) : le sens n'est pas une image mentale mais l'ensemble des usages dans une pratique sociale.\n2. Augustin : les mots nomment des objets (ostension). Wittgenstein montre qu'apprendre un mot c'est apprendre à l'utiliser dans des contextes variés.\n3. Lebensform : les jeux de langage s'ancrent dans des pratiques et des institutions partagées — le langage n'est pas privé.\n4. La vérité devient relative à un jeu de langage, ce qui n'implique pas le relativisme absolu mais l'abandon du fondationnalisme.",
+   tags:['Wittgenstein','langage','usage','philosophie analytique'],likes:26,date:'2025-03-08',likedBy:[],bkBy:[]}
+];
+
+// ══════════════════════════════════════
+// STATE
+// ══════════════════════════════════════
+let EX=[], tags=[], editId=null;
+let F={subject:'all',level:'all',diff:'all'};
+
+function load(){
+  const d=localStorage.getItem('exobanque_v2');
+  EX=d?JSON.parse(d):[...SAMPLE];
+  if(!d) store();
+}
+function store(){ localStorage.setItem('exobanque_v2',JSON.stringify(EX)) }
+
+// ══════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════
+function setF(type,val,el){
+  F[type]=val;
+  el.parentElement.querySelectorAll('.fi').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+function filtered(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  return EX.filter(e=>{
+    if(F.subject!=='all' && e.subject!==F.subject) return false;
+    if(F.level!=='all' && e.level!==F.level) return false;
+    if(F.diff!=='all' && e.difficulty!==F.diff) return false;
+    if(q){
+      const h=(e.title+' '+e.content+' '+(e.tags||[]).join(' ')+' '+e.subject+' '+e.level).toLowerCase();
+      if(!h.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function render(){
+  let list=filtered();
+  const s=document.getElementById('sortSel').value;
+  if(s==='pop') list=[...list].sort((a,b)=>b.likes-a.likes);
+  else if(s==='new') list=[...list].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  else list=[...list].sort((a,b)=>a.title.localeCompare(b.title,'fr'));
+  
+  document.getElementById('resCount').textContent=`${list.length} exercice${list.length!==1?'s':''} trouvé${list.length!==1?'s':''}`;
+  document.getElementById('sExos').textContent=EX.length;
+  document.getElementById('sContribs').textContent=[...new Set(EX.map(e=>e.author).filter(Boolean))].length;
+  updateCounts();
+  renderChips();
+  
+  const g=document.getElementById('exGrid');
+  if(!list.length){
+    g.innerHTML=`<div class="empty"><div class="empty-ico">🔍</div><div class="empty-t">Aucun exercice trouvé</div><div class="empty-d">Modifiez vos filtres ou <a href="#" onclick="openAdd()">publiez le premier exercice</a> dans cette catégorie.</div></div>`;
+    return;
+  }
+  g.innerHTML=list.map(e=>card(e)).join('');
+}
+
+function card(e){
+  const c=SC[e.subject]||'#6366f1';
+  const ico=SI[e.subject]||'📖';
+  const dc=DIFF_CLS[e.difficulty]||'';
+  const init=(e.author||'A').substring(0,2).toUpperCase();
+  const dt=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'';
+  const prev=esc(e.content).substring(0,160)+(e.content.length>160?'…':'');
+  const liked=(e.likedBy||[]).includes('me');
+  const bkd=(e.bkBy||[]).includes('me');
+  return `<div class="card" style="--sc:${c}" onclick="openDetail('${e.id}')">
+    <div class="c-hd">
+      <div class="c-ico" style="background:${c}1a;color:${c}">${ico}</div>
+      <div class="c-meta">
+        <div class="c-title">${esc(e.title)}</div>
+        <div class="c-tags">
+          <span class="badge" style="background:${c}1a;color:${c};border:1px solid ${c}33">${esc(e.subject)}</span>
+          <span class="badge">${esc(e.level)}</span>
+          <span class="badge ${dc}">${esc(e.difficulty)}</span>
+        </div>
+      </div>
+    </div>
+    <div class="c-body">${prev}</div>
+    <div class="c-foot">
+      <div class="c-author">
+        <div class="ava" style="background:linear-gradient(135deg,${c},#a855f7)">${init}</div>
+        ${esc(e.author||'Anonyme')} · ${dt}
+      </div>
+      <div class="c-act">
+        <button class="ibt${liked?' liked':''}" onclick="event.stopPropagation();like('${e.id}')" title="J'aime">♥</button>
+        <span class="lk">${e.likes}</span>
+        <button class="ibt${bkd?' bookmarked':''}" onclick="event.stopPropagation();bk('${e.id}')" title="Sauvegarder">🔖</button>
+        <button class="ibt" onclick="event.stopPropagation();del('${e.id}')" title="Supprimer" style="color:var(--txt3)">🗑</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function updateCounts(){
+  const map={'fc-all':EX.length,'fc-Math':cnt('Mathématiques'),'fc-Phys':cnt('Physique'),'fc-Chim':cnt('Chimie'),'fc-Bio':cnt('Biologie'),'fc-Info':cnt('Informatique'),'fc-Hist':cnt('Histoire-Géo'),'fc-Fr':cnt('Français'),'fc-Eng':cnt('Anglais'),'fc-Eco':cnt('Économie'),'fc-Philo':cnt('Philosophie'),'fc-Other':cnt('Autre')};
+  for(const [id,n] of Object.entries(map)){
+    const el=document.getElementById(id);
+    if(el) el.textContent=n||'';
+  }
+}
+function cnt(s){ return EX.filter(e=>e.subject===s).length }
+
+function renderChips(){
+  const c=document.getElementById('chipsArea');
+  const items=[];
+  if(F.subject!=='all') items.push([`Matière : ${F.subject}`,'subject']);
+  if(F.level!=='all') items.push([`Niveau : ${F.level}`,'level']);
+  if(F.diff!=='all') items.push([`Difficulté : ${F.diff}`,'diff']);
+  const q=document.getElementById('searchInput').value.trim();
+  if(q) items.push([`"${q}"`,'q']);
+  c.innerHTML=items.map(([lbl,t])=>`<div class="chip">${esc(lbl)}<span class="chip-x" onclick="clearF('${t}')">×</span></div>`).join('');
+}
+function clearF(t){
+  if(t==='q'){ document.getElementById('searchInput').value=''; render(); return; }
+  F[t]='all';
+  const grp={subject:'sfList',level:'lfList',diff:'dfList'}[t];
+  if(grp){
+    const list=document.getElementById(grp);
+    list.querySelectorAll('.fi').forEach(i=>i.classList.remove('active'));
+    list.querySelector('[data-v="all"]').classList.add('active');
+  }
+  render();
+}
+
+// ══════════════════════════════════════
+// DETAIL
+// ══════════════════════════════════════
+function openDetail(id){
+  const e=EX.find(x=>x.id===id); if(!e) return;
+  const c=SC[e.subject]||'#6366f1';
+  const ico=SI[e.subject]||'📖';
+  const dc=DIFF_CLS[e.difficulty]||'';
+  const init=(e.author||'A').substring(0,2).toUpperCase();
+  const dt=e.date?new Date(e.date).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
+  const tgsHtml=(e.tags||[]).map(t=>`<span class="badge">${esc(t)}</span>`).join(' ');
+  document.getElementById('detBody').innerHTML=`
+    <div class="d-banner" style="background:linear-gradient(135deg,${c}12,${c}04)">
+      <div class="d-badges">
+        <span class="badge" style="background:${c}1a;color:${c}">${ico} ${esc(e.subject)}</span>
+        <span class="badge">${esc(e.level)}</span>
+        <span class="badge ${dc}">${esc(e.difficulty)}</span>
+      </div>
+      <div class="d-title">${esc(e.title)}</div>
+      <div class="d-meta">
+        <div class="d-mi"><div class="ava" style="width:26px;height:26px;font-size:11px;background:linear-gradient(135deg,${c},#a855f7)">${init}</div>${esc(e.author||'Anonyme')}</div>
+        <div class="d-mi">📅 ${dt}</div>
+        <div class="d-mi">♥ ${e.likes} j'aime</div>
+      </div>
+    </div>
+    <div class="m-body">
+      ${tgsHtml?`<div style="margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px">${tgsHtml}</div>`:''}
+      <div class="sec-lbl">Énoncé</div>
+      <div class="exo-body">${esc(e.content)}</div>
+      ${e.solution?`
+      <div class="mt24">
+        <div class="sec-lbl">Correction</div>
+        <div class="sol-toggle" onclick="toggleSol(this)">
+          <span>🔓 Afficher la solution</span><span id="solArr">▼</span>
+        </div>
+        <div id="solBox" style="display:none" class="mt16">
+          <div class="sol-box"><div class="exo-body">${esc(e.solution)}</div></div>
+        </div>
+      </div>`:''}
+      <div class="mt24">
+        <div class="sec-lbl">Aide IA</div>
+        <div class="ai-box">
+          <div class="ai-hd">
+            <span class="ai-badge">✦ IA</span>
+            <span style="font-size:13px;color:var(--txt2)">Obtenir un indice personnalisé</span>
+          </div>
+          <div id="aiTxt" style="font-size:13.5px;color:var(--txt3);font-style:italic;margin-bottom:12px">
+            Cliquez ci-dessous pour un indice pédagogique sans dévoiler la solution.
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="aiHint('${id}')">
+            💡 Obtenir un indice
+          </button>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="like('${id}');closeOv('detOv')">♥ J'aime (${e.likes})</button>
+        <button class="btn btn-ghost btn-sm" onclick="bk('${id}');closeOv('detOv')">🔖 Sauvegarder</button>
+        <button class="btn btn-primary btn-sm" onclick="openEdit('${id}')">✏️ Modifier</button>
+      </div>
+    </div>`;
+  openOv('detOv');
+}
+
+function toggleSol(el){
+  const b=document.getElementById('solBox');
+  const a=document.getElementById('solArr');
+  if(b.style.display==='none'){b.style.display='block';a.textContent='▲';el.querySelector('span').textContent='🔒 Masquer la solution';}
+  else{b.style.display='none';a.textContent='▼';el.querySelector('span').textContent='🔓 Afficher la solution';}
+}
+
+// ══════════════════════════════════════
+// AI HINT
+// ══════════════════════════════════════
+async function aiHint(id){
+  const e=EX.find(x=>x.id===id); if(!e) return;
+  const box=document.getElementById('aiTxt');
+  box.innerHTML='<div style="display:flex;align-items:center;gap:8px;color:var(--txt2)"><div class="spinner"></div> L\'IA analyse l\'exercice…</div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-6',max_tokens:600,
+        system:`Tu es un tuteur pédagogique bienveillant et rigoureux. Quand on te présente un exercice scolaire ou universitaire, tu donnes UN SEUL INDICE utile sans révéler la solution. Tu guides l'étudiant vers la bonne démarche. Réponds en français, 3 à 5 lignes maximum, ton chaleureux. Tu peux utiliser des formules mathématiques en notation textuelle simple.`,
+        messages:[{role:'user',content:`Matière : ${e.subject} | Niveau : ${e.level} | Difficulté : ${e.difficulty}\n\nExercice :\n${e.content}\n\nDonne-moi un indice pédagogique pour bien démarrer, sans révéler la solution.`}]
+      })
+    });
+    const d=await r.json();
+    const txt=d.content.map(b=>b.text||'').join('');
+    box.innerHTML=`<div class="ai-txt">${esc(txt)}</div>`;
+  }catch(err){
+    box.innerHTML=`<div style="color:var(--err);font-size:13.5px">⚠️ Impossible d'obtenir un indice pour le moment. Vérifiez votre connexion.</div>`;
+  }
+}
+
+// ══════════════════════════════════════
+// LIKE / BOOKMARK / DELETE
+// ══════════════════════════════════════
+function like(id){
+  const e=EX.find(x=>x.id===id); if(!e) return;
+  if(!e.likedBy) e.likedBy=[];
+  if(e.likedBy.includes('me')){ e.likedBy=e.likedBy.filter(x=>x!=='me'); e.likes--; }
+  else{ e.likedBy.push('me'); e.likes++; toast('Exercice apprécié !','♥','ok'); }
+  store(); render();
+}
+function bk(id){
+  const e=EX.find(x=>x.id===id); if(!e) return;
+  if(!e.bkBy) e.bkBy=[];
+  if(e.bkBy.includes('me')){ e.bkBy=e.bkBy.filter(x=>x!=='me'); toast('Retiré des favoris','🔖'); }
+  else{ e.bkBy.push('me'); toast('Sauvegardé dans vos favoris','⭐','ok'); }
+  store(); render();
+}
+function del(id){
+  if(!confirm('Supprimer cet exercice ? Cette action est irréversible.')) return;
+  EX=EX.filter(e=>e.id!==id); store(); render(); toast('Exercice supprimé','🗑');
+}
+
+// ══════════════════════════════════════
+// ADD / EDIT
+// ══════════════════════════════════════
+function openAdd(){
+  editId=null;
+  document.getElementById('addTitle').textContent='Ajouter un exercice';
+  ['fTitle','fSubject','fLevel','fDiff','fAuthor','fContent','fSolution'].forEach(i=>document.getElementById(i).value='');
+  tags=[];renderTags();
+  openOv('addOv');
+}
+function openEdit(id){
+  const e=EX.find(x=>x.id===id); if(!e) return;
+  editId=id; closeOv('detOv');
+  document.getElementById('addTitle').textContent='Modifier l\'exercice';
+  document.getElementById('fTitle').value=e.title||'';
+  document.getElementById('fSubject').value=e.subject||'';
+  document.getElementById('fLevel').value=e.level||'';
+  document.getElementById('fDiff').value=e.difficulty||'';
+  document.getElementById('fAuthor').value=e.author||'';
+  document.getElementById('fContent').value=e.content||'';
+  document.getElementById('fSolution').value=e.solution||'';
+  tags=[...(e.tags||[])]; renderTags();
+  openOv('addOv');
+}
+function save(){
+  const t=document.getElementById('fTitle').value.trim();
+  const s=document.getElementById('fSubject').value;
+  const lv=document.getElementById('fLevel').value;
+  const d=document.getElementById('fDiff').value;
+  const c=document.getElementById('fContent').value.trim();
+  if(!t||!s||!lv||!d||!c){ toast('Complétez les champs obligatoires (*)','⚠️','err'); return; }
+  const data={title:t,subject:s,level:lv,difficulty:d,
+    author:document.getElementById('fAuthor').value.trim()||'Anonyme',
+    content:c,solution:document.getElementById('fSolution').value.trim(),
+    tags:[...tags],date:new Date().toISOString().split('T')[0]};
+  if(editId){
+    const idx=EX.findIndex(e=>e.id===editId);
+    EX[idx]={...EX[idx],...data};
+    toast('Exercice mis à jour !','✅','ok');
+  } else {
+    EX.unshift({...data,id:'e'+Date.now(),likes:0,likedBy:[],bkBy:[]});
+    toast('Exercice publié avec succès !','🎉','ok');
+  }
+  store(); render(); closeOv('addOv');
+}
+
+// ══════════════════════════════════════
+// TAGS INPUT
+// ══════════════════════════════════════
+function renderTags(){
+  const w=document.getElementById('tagsWrap');
+  const inp=document.getElementById('tagInput');
+  w.innerHTML='';
+  tags.forEach((t,i)=>{
+    const s=document.createElement('span'); s.className='tg';
+    s.innerHTML=`${esc(t)} <span class="tg-rm" onclick="rmTag(${i})">×</span>`;
+    w.appendChild(s);
+  });
+  w.appendChild(inp); inp.value=''; inp.focus();
+}
+function rmTag(i){ tags.splice(i,1); renderTags(); }
+document.getElementById('tagInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'||e.key===','){
+    e.preventDefault();
+    const v=e.target.value.trim().replace(/,/g,'');
+    if(v&&!tags.includes(v)){ tags.push(v); renderTags(); }
+  }
+  if(e.key==='Backspace'&&e.target.value===''&&tags.length){ tags.pop(); renderTags(); }
+});
+
+// ══════════════════════════════════════
+// STATS
+// ══════════════════════════════════════
+function showStats(){
+  const bySubj=Object.entries(SC).map(([s,c])=>{
+    const n=cnt(s); if(!n) return '';
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
+      <div style="width:130px;font-size:13px;color:var(--txt2)">${s}</div>
+      <div style="flex:1;height:8px;background:var(--s3);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${Math.round(n/EX.length*100)}%;background:${c};border-radius:4px"></div>
+      </div>
+      <div style="width:28px;text-align:right;font-size:13px;color:var(--txt3)">${n}</div>
+    </div>`;
+  }).join('');
+  const top=[...EX].sort((a,b)=>b.likes-a.likes).slice(0,3);
+  const topHtml=top.map((e,i)=>`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
+    <div style="font-size:20px">${['🥇','🥈','🥉'][i]}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(e.title)}</div>
+      <div style="font-size:12px;color:var(--txt2)">${e.subject} · ${e.level}</div>
+    </div>
+    <div style="font-size:13px;color:var(--err)">♥ ${e.likes}</div>
+  </div>`).join('');
+  document.getElementById('statsBody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:22px">
+      <div style="background:var(--s2);border-radius:var(--r);padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif">${EX.length}</div>
+        <div style="font-size:12px;color:var(--txt2)">Total exercices</div>
+      </div>
+      <div style="background:var(--s2);border-radius:var(--r);padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif">${[...new Set(EX.map(e=>e.author).filter(Boolean))].length}</div>
+        <div style="font-size:12px;color:var(--txt2)">Contributeurs</div>
+      </div>
+      <div style="background:var(--s2);border-radius:var(--r);padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif">${EX.reduce((a,e)=>a+e.likes,0)}</div>
+        <div style="font-size:12px;color:var(--txt2)">J'aime au total</div>
+      </div>
+      <div style="background:var(--s2);border-radius:var(--r);padding:14px;text-align:center">
+        <div style="font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif">${[...new Set(EX.flatMap(e=>e.tags||[]))].length}</div>
+        <div style="font-size:12px;color:var(--txt2)">Tags uniques</div>
+      </div>
+    </div>
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin-bottom:12px">Répartition par matière</div>
+    ${bySubj}
+    <div style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--txt3);margin:18px 0 10px">Top 3 exercices</div>
+    ${topHtml}`;
+  openOv('statsOv');
+}
+
+// ══════════════════════════════════════
+// MODALS
+// ══════════════════════════════════════
+function openOv(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden' }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow='' }
+document.querySelectorAll('.ov').forEach(el=>el.addEventListener('click',function(e){ if(e.target===this) closeOv(this.id) }));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.ov.open').forEach(el=>closeOv(el.id)) });
+
+// ══════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════
+function toast(msg,ico='ℹ️',type=''){
+  const c=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${ico}</span><span>${msg}</span>`;
+  c.appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ══════════════════════════════════════
+// SEARCH
+// ══════════════════════════════════════
+let st; document.getElementById('searchInput').addEventListener('input',()=>{ clearTimeout(st); st=setTimeout(render,280) });
+
+// ══════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') }
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+load(); render();
+</script>
+</body>
+</html>
